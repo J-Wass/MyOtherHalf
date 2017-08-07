@@ -1,0 +1,28 @@
+body {
+  background-color: #fffafa;
+  background-image: url("/static/img/bg.png");
+}
+
+#welcome-container {
+  margin-top: 10%;
+}
+
+#main-title {
+  text-align: center;
+}
+
+.alert {
+  margin: 10px;
+}
+
+.btn-primary {
+  margin-top: 5%;
+}
+
+#nickname {
+  margin-top: 5%;
+}
+
+.arrow {
+  font-size: 20px;
+}

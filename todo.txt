@@ -1,0 +1,6 @@
+.::todo::.
+1. start working on sockets between client & Flask
+2. start ui design of client game
+3. create queue process for users joining
+4. create actual game prototype
+5. assign rooms more efficiently
