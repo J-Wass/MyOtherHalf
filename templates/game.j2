@@ -5,7 +5,47 @@
 {{ Room.roomId }}
 {% endblock %}
 {% block scripts %}
-<script type="javascript">
-//game here lol
+<script>
+var game = new Phaser.Game($(window).height(), $(window).width(), Phaser.AUTO, '', { preload: preload, create: create, update: update }, true);
+
+function preload() {
+  game.load.image('player', '../static/img/player.png');
+  game.load.image('platform', '../static/img/platform.png');
+}
+
+function create() {
+   game.physics.startSystem(Phaser.Physics.ARCADE);
+
+   game.add.sprite(0, 0, 'player');
+
+   //create the level
+   platforms = game.add.group();
+   platforms.enableBody = true;
+
+   //create the bottom platform
+   var ground = platforms.create(0, 300, 'platform');
+   ground.body.immovable = true;
+
+   //create 2 ledges above the bottom platform
+   var ledge = platforms.create(400, 200, 'platform');
+   ledge.body.immovable = true;
+   ledge = platforms.create(400, 100, 'platform');
+   ledge.body.immovable = true;
+}
+
+function update() {
+}
+
+var socket = io("http://127.0.0.1:5000");
+
+socket.on('joinroom response', function(ids) {
+  console.log(ids);
+});
+
+//onload, send joinroom message to server
+$(function(){
+  console.log('emitting joinroom');
+  socket.emit('joinroom', {username: '{{User.playername}}', roomid: {{Room.roomId}} });
+})
 </script>
 {% endblock %}

@@ -1,3 +1,3 @@
-from controller import app
+from controller import app, socketio
 if __name__ == "__main__":
-    app.run()
+    socketio.run(app)
