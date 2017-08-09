@@ -1,13 +1,12 @@
 {% extends "layout.html" %}
 {% block title %} My Other Half {% endblock %}
 {% block content %}
-{{ User.playername }}
-{{ Room.roomId }}
+velocity: <div id="vel">0</div>
+acc: <div id="acc">0</div>
 {% endblock %}
 {% block scripts %}
 <script>
-var game = new Phaser.Game($(window).height(), $(window).width(), Phaser.AUTO, '', { preload: preload, create: create, update: update }, true);
-
+var game;
 function preload() {
   game.load.image('player', '../static/img/player.png');
   game.load.image('platform', '../static/img/platform.png');
@@ -16,7 +15,11 @@ function preload() {
 function create() {
    game.physics.startSystem(Phaser.Physics.ARCADE);
 
-   game.add.sprite(0, 0, 'player');
+   player = game.add.sprite(0, 0, 'player');
+   game.physics.arcade.enable(player);
+   player.body.bounce.y = 0.2;
+   player.body.gravity.y = 600;
+   player.body.collideWorldBounds = true;
 
    //create the level
    platforms = game.add.group();
@@ -27,25 +30,73 @@ function create() {
    ground.body.immovable = true;
 
    //create 2 ledges above the bottom platform
-   var ledge = platforms.create(400, 200, 'platform');
+   var ledge = platforms.create(400, 250, 'platform');
    ledge.body.immovable = true;
-   ledge = platforms.create(400, 100, 'platform');
+   ledge = platforms.create(600, 200, 'platform');
    ledge.body.immovable = true;
 }
 
+var can_double_jump = true;
 function update() {
+  $('#vel').text(player.body.velocity.y);
+  $('#acc').text(player.body.acceleration.x);
+  cursors = game.input.keyboard.createCursorKeys();
+
+  //collide on platforms
+  game.physics.arcade.collide(player, platforms);
+
+  //if moving too slow, player stops moving
+  if(Math.abs(player.body.velocity.x) < 80 && player.body.touching.down){
+    player.body.velocity.x = 0
+    player.body.acceleration.x = 0
+    can_double_jump = true;
+  }
+  player.body.acceleration.x = -2.5 * player.body.velocity.x;
+  if (cursors.left.isDown){ //LEFT
+    if(!player.body.touching.down){
+      player.body.velocity.x = Math.min(-100,player.body.velocity.x)
+    }
+    else{
+      player.body.velocity.x = -150;
+      can_double_jump = true;
+    }
+  }
+  else if (cursors.right.isDown){ //RIGHT
+      if(!player.body.touching.down){
+        player.body.velocity.x = Math.max(100,player.body.velocity.x)
+      }
+      else{
+        player.body.velocity.x = 150;
+        can_double_jump = true;
+      }
+  }
+  if (cursors.up.isDown){ //JUMP
+      if(player.body.touching.down){ //normal jump
+        player.body.velocity.y = -350;
+        can_double_jump = true;
+      }
+      if(!player.body.touching.down && can_double_jump && player.body.velocity.y > -250){//double jump
+        player.body.velocity.y = -350;
+        can_double_jump = false;
+      }
+  }
+  else if (cursors.down.isDown){ //DROP
+      player.body.velocity.y = 200;
+  }
 }
 
+//NETWORK TRAFFIC
 var socket = io("http://127.0.0.1:5000");
 
 socket.on('joinroom response', function(ids) {
   console.log(ids);
 });
+//END NETWORK TRAFFIC
 
 //onload, send joinroom message to server
 $(function(){
-  console.log('emitting joinroom');
-  socket.emit('joinroom', {username: '{{User.playername}}', roomid: {{Room.roomId}} });
+  game = new Phaser.Game($(window).width() - 400, $(window).height()-100, Phaser.AUTO, '', { preload: preload, create: create, update: update }, true);
+  socket.emit('joinroom', {username: '{{User.playername}}', room_id: {{Room.room_id}} });
 })
 </script>
 {% endblock %}
