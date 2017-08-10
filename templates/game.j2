@@ -1,8 +1,7 @@
 {% extends "layout.html" %}
 {% block title %} My Other Half {% endblock %}
 {% block content %}
-velocity: <div id="vel">0</div>
-acc: <div id="acc">0</div>
+{{User.abilities}}
 {% endblock %}
 {% block scripts %}
 <script>
@@ -10,6 +9,7 @@ var game;
 function preload() {
   game.load.image('player', '../static/img/player.png');
   game.load.image('platform', '../static/img/platform.png');
+  game.stage.disableVisibilityChange = true;
 }
 
 function create() {
@@ -35,12 +35,13 @@ function create() {
    ledge = platforms.create(600, 200, 'platform');
    ledge.body.immovable = true;
 }
+var can_double_jump = false;
+var last_jump = (new Date()).getTime();
 
-var can_double_jump = true;
 function update() {
+  cursors = game.input.keyboard.createCursorKeys();
   $('#vel').text(player.body.velocity.y);
   $('#acc').text(player.body.acceleration.x);
-  cursors = game.input.keyboard.createCursorKeys();
 
   //collide on platforms
   game.physics.arcade.collide(player, platforms);
@@ -49,54 +50,102 @@ function update() {
   if(Math.abs(player.body.velocity.x) < 80 && player.body.touching.down){
     player.body.velocity.x = 0
     player.body.acceleration.x = 0
-    can_double_jump = true;
   }
+
+  //emulate some kinda friction (sorry for basing it off of velocity)
   player.body.acceleration.x = -2.5 * player.body.velocity.x;
   if (cursors.left.isDown){ //LEFT
-    if(!player.body.touching.down){
-      player.body.velocity.x = Math.min(-100,player.body.velocity.x)
-    }
-    else{
-      player.body.velocity.x = -150;
-      can_double_jump = true;
-    }
+      requestLeft();
   }
   else if (cursors.right.isDown){ //RIGHT
-      if(!player.body.touching.down){
-        player.body.velocity.x = Math.max(100,player.body.velocity.x)
-      }
-      else{
-        player.body.velocity.x = 150;
-        can_double_jump = true;
-      }
+      requestRight();
   }
   if (cursors.up.isDown){ //JUMP
-      if(player.body.touching.down){ //normal jump
-        player.body.velocity.y = -350;
-        can_double_jump = true;
-      }
-      if(!player.body.touching.down && can_double_jump && player.body.velocity.y > -250){//double jump
-        player.body.velocity.y = -350;
-        can_double_jump = false;
-      }
+      requestJump();
   }
   else if (cursors.down.isDown){ //DROP
-      player.body.velocity.y = 200;
+      requestDrop();
   }
 }
+
+//MOVEMENT REQUESTS
+function requestLeft(){
+  socket.emit('tryleft', {player_id: {{User.player_id}}, room_id: {{Room.room_id}} });
+}
+function requestRight(){
+  socket.emit('tryright', {player_id: {{User.player_id}}, room_id: {{Room.room_id}} });
+}
+function requestJump(){
+  socket.emit('tryjump', {player_id: {{User.player_id}}, room_id: {{Room.room_id}} });
+}
+function requestDrop(){
+  socket.emit('trydrop', {player_id: {{User.player_id}}, room_id: {{Room.room_id}} });
+}
+//END MOVEMENT REQUESTS
+
+//MOVEMENT FUNCTIONS
+function moveLeft(){
+  if(!player.body.touching.down){
+    player.body.velocity.x = Math.min(-100,player.body.velocity.x)
+  }
+  else{
+    player.body.velocity.x = -150;
+  }
+}
+function moveRight(){
+  if(!player.body.touching.down){
+    player.body.velocity.x = Math.max(100,player.body.velocity.x)
+  }
+  else{
+    player.body.velocity.x = 150;
+  }
+}
+function moveDrop(){
+  player.body.velocity.y += 25; //can't change accel bc it will mess with gravity, lol
+}
+function moveJump(){
+  if(player.body.touching.down){ //normal jump
+    player.body.velocity.y = -350;
+    can_double_jump = true;
+    last_jump = (new Date()).getTime()
+
+  }
+  if(!player.body.touching.down && can_double_jump && ((new Date()).getTime() - last_jump > 500)){//double jump
+    player.body.velocity.y = -300;
+    player.body.velocity.x *= 1.5;
+    can_double_jump = false;
+  }
+}
+//END MOVEMENT FUNCTONS
 
 //NETWORK TRAFFIC
 var socket = io("http://127.0.0.1:5000");
 
-socket.on('joinroom response', function(ids) {
+socket.on('player joined', function(ids) {
   console.log(ids);
+});
+
+socket.on('move right', function() {
+  console.log('right');
+  moveRight();
+});
+socket.on('move left', function() {
+  console.log('left');
+  moveLeft();
+});
+socket.on('move jump', function() {
+  console.log('jump');
+  moveJump();
+});
+socket.on('move drop', function() {
+  moveDrop();
 });
 //END NETWORK TRAFFIC
 
 //onload, send joinroom message to server
 $(function(){
-  game = new Phaser.Game($(window).width() - 400, $(window).height()-100, Phaser.AUTO, '', { preload: preload, create: create, update: update }, true);
-  socket.emit('joinroom', {username: '{{User.playername}}', room_id: {{Room.room_id}} });
+  game = new Phaser.Game($(window).width() - 400, $(window).height()-100, Phaser.Auto, '', { preload: preload, create: create, update: update }, true);
+  socket.emit('joinroom', {player_id: {{User.player_id}}, room_id: {{Room.room_id}} });
 })
 </script>
 {% endblock %}
