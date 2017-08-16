@@ -29,7 +29,7 @@ def createUser(nickname):
     usernames.append(nickname)
     max_id = 0
     if players:
-        max_id = max(room.room_id for room in rooms) + 1
+        max_id = max(player.player_id for player in players) + 1
     pl = Player(nickname, max_id)
     players.append(pl)
     return pl
@@ -49,7 +49,7 @@ def addUserToFreeRoom(user): #returns None if an error occurs in room organizati
         max_room = getRoomById(max_room_id)
         if max_room == None: #if room couldn't be found, but its id is in the room listing
              return None
-        if max_room.player_count < 2: #joining max room
+        if max_room.playerCount() < 2: #joining max room
             if(max_room.addPlayer(user) == None): #if room is full, but isn't supposed to be
                 return None
             rooms.append(max_room)
@@ -87,16 +87,16 @@ def on_joinroom(data):
 
     #assign abilities
     room = getRoomById(room_id)
-    if room.player_count == 2: #if room is ready
-        room.player1.addAbility(Ability.LEFT)
-        room.player1.addAbility(Ability.JUMP)
-        room.player2.addAbility(Ability.RIGHT)
-        room.player2.addAbility(Ability.DOUBLE_JUMP)
-        room.player2.addAbility(Ability.DROP)
-    emit('player joined', str(player_id) + ' ' + str(room_id), room=room_id)
+    if room.playerCount() == 2: #if room is ready
+        room.getPlayer(1).addAbility(Ability.LEFT)
+        room.getPlayer(1).addAbility(Ability.JUMP)
+        room.getPlayer(2).addAbility(Ability.RIGHT)
+        room.getPlayer(2).addAbility(Ability.DOUBLE_JUMP)
+        room.getPlayer(2).addAbility(Ability.DROP)
+    emit('player joined', ','.join(map(str, room.getPlayer(1).abilities)) + ' | ' + ','.join(map(str, room.getPlayer(2).abilities)), room=room_id)
 
 @socketio.on('tryright')
-def on_tryleft(data):
+def on_tryright(data):
     room_id = data['room_id']
     player_id = data['player_id']
     player = getPlayerById(player_id)
@@ -112,15 +112,23 @@ def on_tryleft(data):
         emit('move left', None , room=room_id)
 
 @socketio.on('tryjump')
-def on_tryleft(data):
+def on_tryjump(data):
     room_id = data['room_id']
     player_id = data['player_id']
     player = getPlayerById(player_id)
     if player.hasAbility(Ability.JUMP):
         emit('move jump', None , room=room_id)
 
+@socketio.on('trydoublejump')
+def on_trydouble(data):
+    room_id = data['room_id']
+    player_id = data['player_id']
+    player = getPlayerById(player_id)
+    if player.hasAbility(Ability.DOUBLE_JUMP):
+        emit('move double jump', None , room=room_id)
+
 @socketio.on('trydrop')
-def on_tryleft(data):
+def on_trydrop(data):
     room_id = data['room_id']
     player_id = data['player_id']
     player = getPlayerById(player_id)

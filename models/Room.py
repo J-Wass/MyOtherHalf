@@ -16,10 +16,19 @@ class Room:
     def addPlayer(self, player):
         if self.player_count == 0:
             self.player1 = player
-            self.player_count += 1
+            self.player_count = 1
         elif self.player_count == 1:
             self.player2 = player
-            self.player_count += 1
+            self.player_count = 2
         else:
             return None
         return player
+    def getRoomId(self):
+        return self.room_id
+    def playerCount(self):
+        return self.player_count
+    def getPlayer(self, playerNum):
+        if playerNum == 1:
+            return self.player1
+        else:
+            return self.player2
