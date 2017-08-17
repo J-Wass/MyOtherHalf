@@ -1,14 +1,16 @@
 {% extends "layout.html" %}
-{% block title %} Join a game {% endblock %}
+{% block title %}
+Join a game
+{% endblock %}
 {% block content %}
 
 <div class="container" id="welcome-container">
   <div class="row">
     <div class="col-sm-6 col-sm-offset-3" id="main-title">
       <div class="panel">
-      {% if error != None and error|string() != '' %}
-      <div class="alert alert-danger">{{error}}</div>
-      {% endif %}
+        {% if error != None and error|string() != '' %}
+        <div class="alert alert-danger">{{error}}</div>
+        {% endif %}
         <div class="panel-body">
           <h1>my other half</h1>
           <p class="help-block">Where teamwork isn't optional</p>
@@ -17,7 +19,7 @@
               <input placeholder="Nickname" class="form-control" name="nickname" id="nickname" />
             </div>
             <div class="clearfix"></div>
-            <button type="submit" class="btn btn-primary">Play <span class="arrow">&#8680;</span></button>
+            <button type="submit" class="btn btn-primary">Play <span class="glyphicon glyphicon-play" aria-hidden="true"></span></button>
           </form>
         </div>
       </div>

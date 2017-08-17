@@ -1,9 +1,23 @@
 {% extends "layout.html" %}
 {% block title %} My Other Half {% endblock %}
-{% block content %}
-{{User.playername}}
-{{Room.getRoomId()}}
-{{User.abilities}}
+  {% block content %}
+<div class="panel panel-default" id="abilitiesPanel">
+  <div class="panel-heading">
+    <h3 class="panel-title">Abilities</h3>
+  </div>
+  <div class="panel-body">
+    <div class="container">
+      <div class="row">
+          <div class="col-md-6">
+            You
+          </div>
+          <div class="col-md-6">
+            Teammate
+          </div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 {% block scripts %}
 <script>
@@ -17,7 +31,7 @@ function preload() {
 function create() {
    game.physics.startSystem(Phaser.Physics.ARCADE);
 
-   player = game.add.sprite(0, 0, 'player');
+   player = game.add.sprite(5, 5, 'player');
    game.physics.arcade.enable(player);
    player.body.bounce.y = 0.2;
    player.body.gravity.y = 600;
@@ -151,7 +165,7 @@ socket.on('move drop', function() {
 
 //onload, send joinroom message to server
 $(function(){
-  game = new Phaser.Game($(window).width() - 400, $(window).height()-100, Phaser.Auto, '', { preload: preload, create: create, update: update }, true);
+  game = new Phaser.Game(1200, 600, Phaser.Auto, '', { preload: preload, create: create, update: update }, true);
   socket.emit('joinroom', {player_id: {{User.player_id}}, room_id: {{Room.room_id}} });
 })
 </script>

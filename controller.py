@@ -34,12 +34,12 @@ def createUser(nickname):
     players.append(pl)
     return pl
 
-def getPlayerById(id):
-    pl = next((p for p in players if p.player_id == id), None)#get the first player with the id, or none
+def getPlayerById(id): #returns None if user can't be found
+    pl = next((p for p in players if p.player_id == id), None)
     return pl
 
 def getRoomById(id): #returns None if room can't be found
-    room = next((r for r in rooms if r.room_id == id), None)#get the first room with the id, or none
+    room = next((r for r in rooms if r.room_id == id), None)
     return room
 
 def addUserToFreeRoom(user): #returns None if an error occurs in room organization
@@ -47,10 +47,10 @@ def addUserToFreeRoom(user): #returns None if an error occurs in room organizati
     if rooms:#if there are rooms, get the biggest one and find the id
         max_room_id = max(room.room_id for room in rooms)
         max_room = getRoomById(max_room_id)
-        if max_room == None: #if room couldn't be found, but its id is in the room listing
+        if max_room == None:
              return None
-        if max_room.playerCount() < 2: #joining max room
-            if(max_room.addPlayer(user) == None): #if room is full, but isn't supposed to be
+        if max_room.playerCount() < 2: #max room
+            if(max_room.addPlayer(user) == None):
                 return None
             rooms.append(max_room)
             return max_room
